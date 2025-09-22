@@ -797,4 +797,149 @@
             elements.registerForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const name = document.
+                const name = document.getElementById('registerName').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                
+                toggleLoading('registerForm', 'registerLoading', 'registerBtnText', true);
+                
+                const result = await apiCall('register', { name, email, password });
+                
+                toggleLoading('registerForm', 'registerLoading', 'registerBtnText', false);
+                
+                if (result.success) {
+                    updateAuthState(result.user, result.token);
+                    closeModal('registerModal');
+                } else {
+                    showAlert('registerError', result.message || '회원가입에 실패했습니다.');
+                }
+            });
+
+            // 포트폴리오 생성 폼
+            elements.portfolioForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('portfolioName').value;
+                const description = document.getElementById('portfolioDescription').value;
+                
+                if (!currentUser) {
+                    showAlert('portfolioError', '로그인이 필요합니다.');
+                    return;
+                }
+                
+                toggleLoading('portfolioForm', 'portfolioLoading', 'portfolioBtnText', true);
+                
+                const result = await apiCall('create-portfolio', {
+                    userId: currentUser.id,
+                    name,
+                    description
+                });
+                
+                toggleLoading('portfolioForm', 'portfolioLoading', 'portfolioBtnText', false);
+                
+                if (result.success) {
+                    showAlert('portfolioSuccess', '포트폴리오가 생성되었습니다!', 'success');
+                    setTimeout(() => {
+                        closeModal('portfolioModal');
+                        loadDashboard(); // 대시보드 새로고침
+                    }, 1500);
+                } else {
+                    showAlert('portfolioError', result.message || '포트폴리오 생성에 실패했습니다.');
+                }
+            });
+
+            // 로그아웃
+            elements.logoutBtn.addEventListener('click', async function() {
+                if (authToken) {
+                    await apiCall('logout', { token: authToken });
+                }
+                
+                updateAuthState(null, null);
+            });
+
+            // 초기 데이터 로드
+            loadCryptoPrices();
+            
+            // 30초마다 시세 업데이트
+            setInterval(loadCryptoPrices, 30000);
+            
+            // 토큰 확인 (새로고침시 로그인 상태 유지용)
+            const savedToken = localStorage.getItem('authToken');
+            if (savedToken) {
+                verifyToken(savedToken);
+            }
+            
+            console.log('블록체인 투자 플랫폼 초기화 완료');
+        });
+
+        // 토큰 검증
+        async function verifyToken(token) {
+            const result = await apiCall('verify-token', { token });
+            
+            if (result.success && result.user) {
+                authToken = token;
+                updateAuthState(result.user, token);
+                localStorage.setItem('authToken', token);
+            } else {
+                localStorage.removeItem('authToken');
+                updateAuthState(null, null);
+            }
+        }
+
+        // 네비게이션 스크롤 (부드러운 스크롤 효과)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                
+                if (href && href !== '#' && href.length > 1) {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+
+        // PWA 설치 지원
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 설치 버튼 표시 (필요시)
+            console.log('PWA 설치 가능');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA 설치됨');
+            deferredPrompt = null;
+        });
+
+        // 서비스 워커 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW 등록 성공:', registration.scope);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW 등록 실패:', registrationError);
+                    });
+            });
+        }
+
+        // 오류 처리
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript 오류:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('처리되지 않은 Promise 오류:', e.reason);
+        });
+    </script>
+</body>
+</html>
