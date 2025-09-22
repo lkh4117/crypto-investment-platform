@@ -6,7 +6,7 @@
 // ===== 설정 =====
 const API_CONFIG = {
     // 여기에 GAS 웹앱 URL을 입력하세요
-    BASE_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',
+    BASE_URL: 'https://script.google.com/macros/s/1DQn1R97Kp8CYAaI79PE5_PaYpX1xnz7xbsqnINf2qfs/exec',
     TIMEOUT: 10000,
     RETRY_ATTEMPTS: 3
 };
