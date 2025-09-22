@@ -3,173 +3,798 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 웹사이트</title>
+    <title>CryptoInvest Pro - 블록체인 투자 플랫폼</title>
+    <meta name="description" content="전문가급 블록체인 투자 플랫폼 - 실시간 시장 데이터, 포트폴리오 관리, AI 분석">
+    
+    <!-- PWA 매니페스트 -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- 파비콘 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f7931a'/><text x='50' y='70' text-anchor='middle' font-size='60' fill='white' font-family='system-ui'>₿</text></svg>">
+    
+    <!-- CSS -->
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+        * {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            line-height: 1.6;
             min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 헤더 */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+        }
+
+        .nav {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
         }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 600px;
-            backdrop-filter: blur(10px);
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #f7931a;
         }
-        
-        h1 {
-            color: #333;
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #f7931a;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #f7931a, #ff6b35);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(247, 147, 26, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 메인 섹션 */
+        .main {
+            padding: 4rem 0;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
             margin-bottom: 1rem;
-            font-size: 2.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(45deg, #f7931a, #ffffff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-        
-        p {
-            color: #666;
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
+
+        .hero p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 600px;
+            margin: 0 auto 2rem;
         }
-        
-        .button {
-            display: inline-block;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 30px;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            margin: 10px;
-        }
-        
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .features {
+
+        /* 카드 그리드 */
+        .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
-        
-        .feature {
-            background: rgba(255, 255, 255, 0.7);
-            padding: 1.5rem;
-            border-radius: 10px;
-            border: 1px solid rgba(102, 126, 234, 0.2);
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease;
         }
-        
-        .feature:hover {
+
+        .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
-        
-        .feature h3 {
-            color: #333;
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #f7931a;
+        }
+
+        .card p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 암호화폐 시세 섹션 */
+        .crypto-prices {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .price-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .crypto-symbol {
+            font-weight: bold;
+            font-size: 1.1rem;
             margin-bottom: 0.5rem;
         }
-        
-        .feature p {
-            font-size: 0.9rem;
-            margin: 0;
+
+        .crypto-price {
+            font-size: 1.5rem;
+            color: #4ade80;
+            margin-bottom: 0.5rem;
         }
-        
-        .footer {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-            color: #888;
+
+        .crypto-change {
             font-size: 0.9rem;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .positive {
+            color: #4ade80;
         }
-        
-        .container {
-            animation: fadeIn 0.8s ease-out;
+
+        .negative {
+            color: #ef4444;
+        }
+
+        /* 인증 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #f7931a;
+            box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.2);
+        }
+
+        /* 대시보드 */
+        .dashboard {
+            display: none;
+        }
+
+        .welcome-message {
+            background: rgba(247, 147, 26, 0.1);
+            border: 1px solid rgba(247, 147, 26, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .portfolio-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .portfolio-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 알림 메시지 */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #4ade80;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .modal-content {
+                margin: 50% auto;
+                width: 95%;
+            }
+        }
+
+        /* 로딩 스피너 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #f7931a;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>환영합니다!</h1>
-        <p>이것은 여러분의 웹사이트입니다. 이 파일을 다운로드하여 원하는 대로 수정하실 수 있습니다.</p>
-        
-        <a href="#" class="button" onclick="showAlert()">클릭해보세요!</a>
-        <a href="#about" class="button">더 알아보기</a>
-        
-        <div class="features">
-            <div class="feature">
-                <h3>🎨 현대적 디자인</h3>
-                <p>아름다운 그라데이션과 애니메이션이 적용된 현대적인 디자인입니다.</p>
-            </div>
-            <div class="feature">
-                <h3>📱 반응형 레이아웃</h3>
-                <p>모든 디바이스에서 완벽하게 보이는 반응형 웹 디자인입니다.</p>
-            </div>
-            <div class="feature">
-                <h3>⚡ 빠른 로딩</h3>
-                <p>최적화된 코드로 빠른 로딩 속도를 제공합니다.</p>
-            </div>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">CryptoInvest Pro</div>
+                <ul class="nav-links">
+                    <li><a href="#home">홈</a></li>
+                    <li><a href="#market">시장</a></li>
+                    <li><a href="#portfolio">포트폴리오</a></li>
+                    <li><a href="#about">소개</a></li>
+                </ul>
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn btn-secondary" id="loginBtn">로그인</button>
+                    <button class="btn btn-primary" id="registerBtn">회원가입</button>
+                </div>
+                <div class="user-menu hidden" id="userMenu">
+                    <span id="userName">사용자</span>
+                    <button class="btn btn-secondary" id="logoutBtn">로그아웃</button>
+                </div>
+            </nav>
         </div>
-        
-        <div class="footer">
-            <p>&copy; 2025 내 웹사이트. 이 파일은 자유롭게 수정하여 사용하실 수 있습니다.</p>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main">
+        <div class="container">
+            <!-- 홈 섹션 -->
+            <section id="home" class="home-section">
+                <div class="hero">
+                    <h1>차세대 암호화폐 투자 플랫폼</h1>
+                    <p>실시간 시장 데이터와 AI 분석으로 스마트한 투자 결정을 내리세요. 전문가들이 사용하는 도구로 여러분의 포트폴리오를 관리하세요.</p>
+                    <button class="btn btn-primary" id="getStartedBtn">시작하기</button>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-icon">📊</div>
+                        <h3>실시간 시장 분석</h3>
+                        <p>최신 암호화폐 시세와 시장 트렌드를 실시간으로 확인하고 분석하세요.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">💼</div>
+                        <h3>포트폴리오 관리</h3>
+                        <p>다양한 암호화폐 포트폴리오를 체계적으로 관리하고 성과를 추적하세요.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🤖</div>
+                        <h3>AI 투자 분석</h3>
+                        <p>인공지능 기반 시장 분석으로 더 나은 투자 결정을 내리세요.</p>
+                    </div>
+                </div>
+
+                <!-- 암호화폐 시세 -->
+                <div class="crypto-prices">
+                    <h2 style="margin-bottom: 1.5rem; text-align: center;">실시간 암호화폐 시세</h2>
+                    <div class="price-grid" id="priceGrid">
+                        <div class="price-item">
+                            <div class="crypto-symbol">BTC</div>
+                            <div class="crypto-price" id="btc-price">$0</div>
+                            <div class="crypto-change" id="btc-change">0%</div>
+                        </div>
+                        <div class="price-item">
+                            <div class="crypto-symbol">ETH</div>
+                            <div class="crypto-price" id="eth-price">$0</div>
+                            <div class="crypto-change" id="eth-change">0%</div>
+                        </div>
+                        <div class="price-item">
+                            <div class="crypto-symbol">BNB</div>
+                            <div class="crypto-price" id="bnb-price">$0</div>
+                            <div class="crypto-change" id="bnb-change">0%</div>
+                        </div>
+                        <div class="price-item">
+                            <div class="crypto-symbol">ADA</div>
+                            <div class="crypto-price" id="ada-price">$0</div>
+                            <div class="crypto-change" id="ada-change">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 대시보드 섹션 -->
+            <section id="dashboard" class="dashboard">
+                <div class="welcome-message">
+                    <h2>환영합니다!</h2>
+                    <p>블록체인 투자 플랫폼에서 스마트한 투자를 시작해보세요.</p>
+                </div>
+
+                <div class="portfolio-section">
+                    <div class="section-header">
+                        <h2>내 포트폴리오</h2>
+                        <button class="btn btn-primary" id="createPortfolioBtn">새 포트폴리오</button>
+                    </div>
+                    <div class="portfolio-grid" id="portfolioGrid">
+                        <!-- 포트폴리오 카드들이 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeLogin">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: #f7931a;">로그인</h2>
+            <div class="alert alert-error" id="loginError"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">이메일:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">비밀번호:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <span id="loginBtnText">로그인</span>
+                    <div class="loading hidden" id="loginLoading"></div>
+                </button>
+            </form>
         </div>
     </div>
-    
+
+    <!-- 회원가입 모달 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeRegister">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: #f7931a;">회원가입</h2>
+            <div class="alert alert-error" id="registerError"></div>
+            <div class="alert alert-success" id="registerSuccess"></div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">이름:</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">이메일:</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">비밀번호:</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <span id="registerBtnText">회원가입</span>
+                    <div class="loading hidden" id="registerLoading"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 포트폴리오 생성 모달 -->
+    <div id="portfolioModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closePortfolio">&times;</span>
+            <h2 style="margin-bottom: 1.5rem; color: #f7931a;">새 포트폴리오 생성</h2>
+            <div class="alert alert-error" id="portfolioError"></div>
+            <div class="alert alert-success" id="portfolioSuccess"></div>
+            <form id="portfolioForm">
+                <div class="form-group">
+                    <label for="portfolioName">포트폴리오 이름:</label>
+                    <input type="text" id="portfolioName" required>
+                </div>
+                <div class="form-group">
+                    <label for="portfolioDescription">설명:</label>
+                    <input type="text" id="portfolioDescription" placeholder="선택사항">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <span id="portfolioBtnText">생성하기</span>
+                    <div class="loading hidden" id="portfolioLoading"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
     <script>
-        function showAlert() {
-            alert('안녕하세요! 이 HTML 파일을 다운로드하여 원하는 대로 수정해보세요.');
+        // API 설정
+        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz6vQgzU9xBWOyRTiJJ2hD1yrON3D1TFqaBKlpbGp7e5HOmxWy9EHr7lZFHpF7yZA/exec';
+
+        // 전역 변수
+        let currentUser = null;
+        let authToken = null;
+
+        // DOM 요소들
+        const elements = {
+            // 인증 관련
+            loginBtn: document.getElementById('loginBtn'),
+            registerBtn: document.getElementById('registerBtn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            getStartedBtn: document.getElementById('getStartedBtn'),
+            authButtons: document.getElementById('authButtons'),
+            userMenu: document.getElementById('userMenu'),
+            userName: document.getElementById('userName'),
+            
+            // 모달들
+            loginModal: document.getElementById('loginModal'),
+            registerModal: document.getElementById('registerModal'),
+            portfolioModal: document.getElementById('portfolioModal'),
+            
+            // 폼들
+            loginForm: document.getElementById('loginForm'),
+            registerForm: document.getElementById('registerForm'),
+            portfolioForm: document.getElementById('portfolioForm'),
+            
+            // 섹션들
+            homeSection: document.getElementById('home'),
+            dashboard: document.getElementById('dashboard'),
+            portfolioGrid: document.getElementById('portfolioGrid'),
+            
+            // 기타
+            priceGrid: document.getElementById('priceGrid'),
+            createPortfolioBtn: document.getElementById('createPortfolioBtn')
+        };
+
+        // API 호출 함수
+        async function apiCall(action, data = {}) {
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action, ...data })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('API 호출 오류:', error);
+                return { success: false, error: error.message };
+            }
         }
-        
-        // 부드러운 스크롤 효과
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-        const href = this.getAttribute('href');
-    if (href && href !== '#' && href.length > 1 && href.startsWith('#')) {
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth'
-                    });
+
+        // 알림 메시지 표시
+        function showAlert(elementId, message, type = 'error') {
+            const alertElement = document.getElementById(elementId);
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.style.display = 'block';
+            
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // 로딩 상태 토글
+        function toggleLoading(buttonId, loadingId, textId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const loading = document.getElementById(loadingId);
+            const text = document.getElementById(textId);
+            
+            button.disabled = isLoading;
+            loading.classList.toggle('hidden', !isLoading);
+            text.style.display = isLoading ? 'none' : 'inline';
+        }
+
+        // 모달 관리
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // 인증 상태 업데이트
+        function updateAuthState(user, token) {
+            currentUser = user;
+            authToken = token;
+            
+            if (user) {
+                elements.authButtons.classList.add('hidden');
+                elements.userMenu.classList.remove('hidden');
+                elements.userName.textContent = user.name || user.email;
+                elements.homeSection.style.display = 'none';
+                elements.dashboard.style.display = 'block';
+                loadDashboard();
+            } else {
+                elements.authButtons.classList.remove('hidden');
+                elements.userMenu.classList.add('hidden');
+                elements.homeSection.style.display = 'block';
+                elements.dashboard.style.display = 'none';
+            }
+        }
+
+        // 대시보드 로드
+        async function loadDashboard() {
+            if (!currentUser) return;
+            
+            // 포트폴리오 로드
+            const result = await apiCall('get-portfolios', { userId: currentUser.id });
+            
+            if (result.success && result.portfolios) {
+                displayPortfolios(result.portfolios);
+            } else {
+                console.error('포트폴리오 로드 실패:', result.error);
+            }
+        }
+
+        // 포트폴리오 표시
+        function displayPortfolios(portfolios) {
+            const grid = elements.portfolioGrid;
+            grid.innerHTML = '';
+            
+            if (portfolios.length === 0) {
+                grid.innerHTML = `
+                    <div class="portfolio-card" style="text-align: center; grid-column: 1/-1;">
+                        <h3>포트폴리오가 없습니다</h3>
+                        <p>첫 번째 포트폴리오를 생성해보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            portfolios.forEach(portfolio => {
+                const card = document.createElement('div');
+                card.className = 'portfolio-card';
+                card.innerHTML = `
+                    <h3>${portfolio.name}</h3>
+                    <p>${portfolio.description || '설명 없음'}</p>
+                    <div style="margin-top: 1rem; font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+                        생성일: ${new Date(portfolio.created_at).toLocaleDateString()}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 암호화폐 시세 로드
+        async function loadCryptoPrices() {
+            const coinIds = ['bitcoin', 'ethereum', 'binancecoin', 'cardano'];
+            const result = await apiCall('get-crypto-prices', { coinIds });
+            
+            if (result.success && result.data) {
+                updatePriceDisplay(result.data);
+            }
+        }
+
+        // 시세 표시 업데이트
+        function updatePriceDisplay(priceData) {
+            const coinMap = {
+                'bitcoin': 'btc',
+                'ethereum': 'eth',
+                'binancecoin': 'bnb',
+                'cardano': 'ada'
+            };
+            
+            for (const [coinId, data] of Object.entries(priceData)) {
+                const symbol = coinMap[coinId];
+                if (symbol && data.usd) {
+                    const priceElement = document.getElementById(`${symbol}-price`);
+                    const changeElement = document.getElementById(`${symbol}-change`);
+                    
+                    if (priceElement) {
+                        priceElement.textContent = `$${data.usd.toLocaleString()}`;
+                    }
+                    
+                    if (changeElement && data.usd_24h_change) {
+                        const change = data.usd_24h_change.toFixed(2);
+                        changeElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                        changeElement.className = `crypto-change ${change > 0 ? 'positive' : 'negative'}`;
+                    }
                 }
             }
-        });
-      });   
-        // 마우스 호버 효과
-        document.querySelectorAll('.feature').forEach(feature => {
-            feature.addEventListener('mouseenter', function() {
-                this.style.background = 'rgba(102, 126, 234, 0.1)';
+        }
+
+        // 이벤트 리스너들
+        document.addEventListener('DOMContentLoaded', function() {
+            // 모달 열기/닫기
+            elements.loginBtn.addEventListener('click', () => openModal('loginModal'));
+            elements.registerBtn.addEventListener('click', () => openModal('registerModal'));
+            elements.getStartedBtn.addEventListener('click', () => openModal('registerModal'));
+            elements.createPortfolioBtn.addEventListener('click', () => openModal('portfolioModal'));
+            
+            // 모달 닫기
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    const modal = this.closest('.modal');
+                    modal.style.display = 'none';
+                });
             });
             
-            feature.addEventListener('mouseleave', function() {
-                this.style.background = 'rgba(255, 255, 255, 0.7)';
+            // 모달 외부 클릭시 닫기
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
             });
-        });
-    </script>
-</body>
 
-</html>
+            // 로그인 폼
+            elements.loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                toggleLoading('loginForm', 'loginLoading', 'loginBtnText', true);
+                
+                const result = await apiCall('login', { email, password });
+                
+                toggleLoading('loginForm', 'loginLoading', 'loginBtnText', false);
+                
+                if (result.success) {
+                    updateAuthState(result.user, result.token);
+                    closeModal('loginModal');
+                } else {
+                    showAlert('loginError', result.message || '로그인에 실패했습니다.');
+                }
+            });
 
-
-
-
+            // 회원가입 폼
+            elements.registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const name = document.
