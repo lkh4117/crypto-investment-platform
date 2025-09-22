@@ -146,8 +146,7 @@
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
         const href = this.getAttribute('href');
-if (href && href !== '#' && href.startsWith('#')) {
-    const target = document.querySelector(href);       
+    if (href && href !== '#' && href.length > 1 && href.startsWith('#')) {
                 if (target) {
                     target.scrollIntoView({
                         behavior: 'smooth'
@@ -170,4 +169,5 @@ if (href && href !== '#' && href.startsWith('#')) {
 </body>
 
 </html>
+
 
