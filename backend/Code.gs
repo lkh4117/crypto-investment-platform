@@ -6,7 +6,7 @@
 // 전역 설정
 const CONFIG = {
   VERSION: '1.0.0',
-  DB_SHEET_ID: '', // 여기에 스프레드시트 ID 입력
+  DB_SHEET_ID: '1DQn1R97Kp8CYAaI79PE5_PaYpX1xnz7xbsqnINf2qfs', // 
   JWT_SECRET: 'blockchain-platform-secret-key-2024',
   CACHE_DURATION: 300, // 5분
   MAX_LOGIN_ATTEMPTS: 5,
