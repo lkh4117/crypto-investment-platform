@@ -1,449 +1,249 @@
 /**
- * 블록체인 투자 플랫폼 - 메인 API
- * Google Apps Script 백엔드 메인 파일
+ * Google Apps Script 웹앱 진입점
+ * GitHub Pages 프론트엔드와 통신하기 위한 API 엔드포인트
  */
 
-// ==================================================
-// 전역 설정 및 초기화
-// ==================================================
-
-const APP_CONFIG = {
-  version: '1.0.0',
-  environment: 'production', // development, staging, production
-  maxRequestsPerMinute: 60,
-  sessionTimeout: 86400000, // 24시간 (밀리초)
-  enableLogging: true,
-  cors: {
-    allowedOrigins: ['*'], // 프로덕션에서는 특정 도메인으로 제한
-    allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
-  }
-};
-
-// 초기화 함수 - 스프레드시트가 처음 열릴 때 실행
-function onOpen() {
-  try {
-    // 메뉴 생성
-    const ui = SpreadsheetApp.getUi();
-    ui.createMenu('블록체인 투자 플랫폼')
-      .addItem('데이터베이스 초기화', 'initializeDatabase')
-      .addItem('API 키 설정', 'setupApiKeys')
-      .addItem('시스템 상태 확인', 'checkSystemStatus')
-      .addSeparator()
-      .addItem('로그 확인', 'viewLogs')
-      .addItem('시스템 정리', 'cleanupSystem')
-      .addToUi();
-    
-    // 시스템 초기화 체크
-    if (!isDatabaseInitialized()) {
-      ui.alert('데이터베이스를 초기화해주세요.');
-    }
-    
-    logActivity('SYSTEM', 'Application started', { version: APP_CONFIG.version });
-  } catch (error) {
-    console.error('초기화 오류:', error);
-    logActivity('ERROR', 'Initialization failed', { error: error.toString() });
-  }
-}
-
-// ==================================================
-// 메인 HTTP 핸들러 (웹앱 진입점)
-// ==================================================
-
+// GET 요청 처리 (웹앱 배포 시 필수)
 function doGet(e) {
-  return handleRequest(e, 'GET');
+  // CORS 헤더 설정
+  return handleRequest(e);
 }
 
+// POST 요청 처리
 function doPost(e) {
-  return handleRequest(e, 'POST');
+  return handleRequest(e);
 }
 
-function handleRequest(e, method) {
+// 메인 요청 처리기
+function handleRequest(e) {
   try {
-    // CORS 헤더 설정
-    const headers = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': APP_CONFIG.cors.allowedMethods.join(', '),
-      'Access-Control-Allow-Headers': APP_CONFIG.cors.allowedHeaders.join(', '),
-      'Cache-Control': 'no-cache'
-    };
-
-    // OPTIONS 요청 처리 (CORS preflight)
-    if (method === 'OPTIONS') {
-      return ContentService
-        .createTextOutput('')
-        .setHeaders(headers);
-    }
-
-    // 요청 파라미터 파싱
-    const params = parseRequestParams(e);
-    const endpoint = params.endpoint || 'status';
-    
-    // 인증 확인 (공개 엔드포인트 제외)
-    const publicEndpoints = ['status', 'auth/login', 'auth/register', 'market/public'];
-    if (!publicEndpoints.includes(endpoint)) {
-      const authResult = validateAuth(params);
-      if (!authResult.valid) {
-        return createResponse({
-          success: false,
-          error: 'UNAUTHORIZED',
-          message: '인증이 필요합니다.'
-        }, 401, headers);
-      }
-      params.userId = authResult.userId;
-    }
-
-    // 라우팅
-    const result = routeRequest(endpoint, params, method);
-    
-    // 성공 응답
-    return createResponse(result, 200, headers);
-    
-  } catch (error) {
-    console.error('Request handling error:', error);
-    logActivity('ERROR', 'Request failed', { 
-      error: error.toString(),
-      method: method,
-      endpoint: e.parameter?.endpoint || 'unknown'
-    });
-    
-    return createResponse({
-      success: false,
-      error: 'INTERNAL_ERROR',
-      message: '서버 오류가 발생했습니다.'
-    }, 500);
-  }
-}
-
-// ==================================================
-// 라우팅 시스템
-// ==================================================
-
-function routeRequest(endpoint, params, method) {
-  const routes = {
-    // 시스템
-    'status': () => getSystemStatus(),
-    
-    // 인증
-    'auth/login': () => handleLogin(params),
-    'auth/register': () => handleRegister(params),
-    'auth/logout': () => handleLogout(params),
-    'auth/refresh': () => refreshToken(params),
-    
-    // 사용자 관리
-    'user/profile': () => getUserProfile(params),
-    'user/update': () => updateUserProfile(params),
-    'user/preferences': () => getUserPreferences(params),
-    
-    // 포트폴리오
-    'portfolio/summary': () => getPortfolioSummary(params),
-    'portfolio/assets': () => getPortfolioAssets(params),
-    'portfolio/transactions': () => getTransactions(params),
-    'portfolio/add-transaction': () => addTransaction(params),
-    'portfolio/update-transaction': () => updateTransaction(params),
-    'portfolio/delete-transaction': () => deleteTransaction(params),
-    
-    // 시장 데이터
-    'market/coins': () => getMarketCoins(params),
-    'market/coin': () => getCoinDetails(params),
-    'market/trending': () => getTrendingCoins(params),
-    'market/watchlist': () => getWatchlist(params),
-    'market/add-to-watchlist': () => addToWatchlist(params),
-    'market/remove-from-watchlist': () => removeFromWatchlist(params),
-    
-    // 분석
-    'analysis/performance': () => getPerformanceAnalysis(params),
-    'analysis/allocation': () => getAllocationAnalysis(params),
-    'analysis/risk': () => getRiskAnalysis(params),
-    
-    // 알림
-    'notifications/list': () => getNotifications(params),
-    'notifications/mark-read': () => markNotificationRead(params),
-    'notifications/settings': () => getNotificationSettings(params),
-    'notifications/update-settings': () => updateNotificationSettings(params),
-    
-    // 관리자
-    'admin/users': () => getUsers(params),
-    'admin/stats': () => getSystemStats(params),
-    'admin/logs': () => getLogs(params)
-  };
-
-  const handler = routes[endpoint];
-  if (!handler) {
-    throw new Error(`Unknown endpoint: ${endpoint}`);
-  }
-
-  return handler();
-}
-
-// ==================================================
-// 시스템 상태 및 헬스체크
-// ==================================================
-
-function getSystemStatus() {
-  try {
-    const startTime = Date.now();
-    
-    // 데이터베이스 연결 확인
-    const dbStatus = checkDatabaseConnection();
-    
-    // 외부 API 연결 확인
-    const apiStatus = checkExternalApiConnection();
-    
-    // 메모리 사용량 확인
-    const memoryInfo = getMemoryUsage();
-    
-    const responseTime = Date.now() - startTime;
-    
-    return {
+    // CORS 헤더 설정을 위한 응답 객체 생성
+    const response = {
       success: true,
-      data: {
-        status: 'healthy',
-        version: APP_CONFIG.version,
-        environment: APP_CONFIG.environment,
-        uptime: getUptime(),
-        responseTime: responseTime,
-        timestamp: new Date().toISOString(),
-        services: {
-          database: dbStatus,
-          externalApi: apiStatus,
-          memory: memoryInfo
-        },
-        features: {
-          authentication: true,
-          portfolio: true,
-          market: true,
-          analysis: true,
-          notifications: true
-        }
-      }
+      data: null,
+      message: '',
+      timestamp: new Date().getTime()
     };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'SYSTEM_ERROR',
-      message: '시스템 상태를 확인할 수 없습니다.',
-      details: error.toString()
-    };
-  }
-}
-
-function checkDatabaseConnection() {
-  try {
-    const sheet = getSheet('system_config');
-    sheet.getRange(1, 1).getValue(); // 테스트 읽기
-    return { status: 'connected', latency: '<10ms' };
-  } catch (error) {
-    return { status: 'error', error: error.toString() };
-  }
-}
-
-function checkExternalApiConnection() {
-  try {
-    // CoinGecko API 핑 테스트
-    const response = UrlFetchApp.fetch('https://api.coingecko.com/api/v3/ping', {
-      method: 'GET',
-      muteHttpExceptions: true
-    });
     
-    if (response.getResponseCode() === 200) {
-      return { status: 'connected', provider: 'CoinGecko' };
-    } else {
-      return { status: 'degraded', provider: 'CoinGecko' };
+    // 요청 파라미터 파싱
+    const params = e.parameter || {};
+    const postData = e.postData ? JSON.parse(e.postData.contents) : {};
+    const action = params.action || postData.action;
+    
+    // 로그 기록
+    writeLog('INFO', 'API_REQUEST', `API 요청: ${action}`, { params, postData });
+    
+    // 액션별 라우팅
+    switch (action) {
+      // 인증 관련
+      case 'register':
+        response.data = registerUser(postData.email, postData.password, postData.name);
+        response.message = '회원가입이 완료되었습니다.';
+        break;
+        
+      case 'login':
+        response.data = loginUser(postData.email, postData.password);
+        response.message = '로그인되었습니다.';
+        break;
+        
+      case 'logout':
+        response.data = logoutUser(postData.token);
+        response.message = '로그아웃되었습니다.';
+        break;
+        
+      case 'verify-token':
+        response.data = verifyUserToken(postData.token);
+        break;
+        
+      // 포트폴리오 관리
+      case 'create-portfolio':
+        response.data = createPortfolio(postData.userId, postData.name, postData.description);
+        response.message = '포트폴리오가 생성되었습니다.';
+        break;
+        
+      case 'get-portfolios':
+        response.data = getUserPortfolios(postData.userId);
+        break;
+        
+      case 'get-portfolio':
+        response.data = getPortfolio(postData.portfolioId);
+        break;
+        
+      case 'update-portfolio':
+        response.data = updatePortfolio(postData.portfolioId, postData.updates);
+        response.message = '포트폴리오가 업데이트되었습니다.';
+        break;
+        
+      case 'delete-portfolio':
+        response.data = deletePortfolio(postData.portfolioId, postData.userId);
+        response.message = '포트폴리오가 삭제되었습니다.';
+        break;
+        
+      // 거래 관리
+      case 'add-transaction':
+        response.data = addTransaction(
+          postData.portfolioId,
+          postData.type,
+          postData.coinId,
+          postData.amount,
+          postData.price,
+          postData.date
+        );
+        response.message = '거래가 추가되었습니다.';
+        break;
+        
+      case 'get-transactions':
+        response.data = getPortfolioTransactions(postData.portfolioId);
+        break;
+        
+      // 시세 정보
+      case 'get-crypto-prices':
+        const coinIds = postData.coinIds || ['bitcoin', 'ethereum'];
+        response.data = getCryptoPrices(coinIds);
+        break;
+        
+      // 시스템 상태
+      case 'health-check':
+        response.data = checkSystemHealth();
+        break;
+        
+      // 기본 응답
+      default:
+        response.success = false;
+        response.message = `알 수 없는 액션: ${action}`;
+        writeLog('WARNING', 'API_REQUEST', '알 수 없는 액션', { action });
     }
+    
   } catch (error) {
-    return { status: 'error', error: error.toString() };
-  }
-}
-
-function getMemoryUsage() {
-  return {
-    status: 'normal',
-    usage: '< 50%', // GAS에서는 정확한 메모리 사용량을 알 수 없음
-    available: 'sufficient'
-  };
-}
-
-function getUptime() {
-  // GAS는 상시 실행되지 않으므로 마지막 실행 시간 기반
-  const lastRun = getSystemProperty('last_run_time');
-  if (lastRun) {
-    const uptime = Date.now() - parseInt(lastRun);
-    return Math.floor(uptime / 1000 / 60); // 분 단위
-  }
-  return 0;
-}
-
-// ==================================================
-// 유틸리티 함수들
-// ==================================================
-
-function parseRequestParams(e) {
-  const params = {};
-  
-  // GET 파라미터
-  if (e.parameter) {
-    Object.assign(params, e.parameter);
+    writeLog('ERROR', 'API_REQUEST', 'API 오류', { error: error.toString() });
+    
+    return createJsonResponse({
+      success: false,
+      error: error.toString(),
+      message: '서버 오류가 발생했습니다.'
+    });
   }
   
-  // POST 데이터
-  if (e.postData && e.postData.contents) {
-    try {
-      const postData = JSON.parse(e.postData.contents);
-      Object.assign(params, postData);
-    } catch (error) {
-      console.warn('Failed to parse POST data:', error);
-    }
-  }
-  
-  return params;
+  return createJsonResponse(response);
 }
 
-function createResponse(data, statusCode = 200, headers = {}) {
+// JSON 응답 생성 (CORS 헤더 포함)
+function createJsonResponse(data) {
   const response = ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
   
-  // 기본 헤더 추가
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'X-Response-Time': new Date().toISOString()
+  // CORS 헤더 설정 (중요!)
+  response.getHeaders = function() {
+    return {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '3600'
+    };
   };
-  
-  const allHeaders = { ...defaultHeaders, ...headers };
-  response.setHeaders(allHeaders);
   
   return response;
 }
 
-// ==================================================
-// 캐싱 시스템
-// ==================================================
+// 암호화폐 가격 조회 함수 (CoinGecko API 사용)
+function getCryptoPrices(coinIds) {
+  const prices = {};
+  
+  coinIds.forEach(coinId => {
+    const priceData = getCryptoPrice(coinId, 'usd');
+    if (priceData && priceData[coinId]) {
+      prices[coinId] = {
+        usd: priceData[coinId].usd,
+        usd_24h_change: priceData[coinId].usd_24h_change || 0
+      };
+    }
+  });
+  
+  return prices;
+}
 
-function getCachedData(key, maxAge = 300000) { // 기본 5분
+// 테스트용 함수 - 직접 실행하여 시스템 확인
+function testSystem() {
   try {
-    const cache = CacheService.getScriptCache();
-    const cachedValue = cache.get(key);
+    // 데이터베이스 초기화
+    initializeDatabase();
     
-    if (cachedValue) {
-      const data = JSON.parse(cachedValue);
-      const age = Date.now() - data.timestamp;
-      
-      if (age < maxAge) {
-        return data.value;
+    // 시스템 설정 초기화
+    initializeSystemSettings();
+    
+    // 건강 상태 체크
+    const health = checkSystemHealth();
+    
+    Logger.log('시스템 테스트 완료');
+    Logger.log(JSON.stringify(health, null, 2));
+    
+    return health;
+  } catch (error) {
+    Logger.log('시스템 테스트 실패: ' + error.toString());
+    return { success: false, error: error.toString() };
+  }
+}
+
+// 데이터베이스 초기 설정
+function setupInitialData() {
+  try {
+    // 스프레드시트 생성 또는 기존 시트 사용
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // 필요한 시트들 생성
+    const sheetNames = ['users', 'portfolios', 'transactions', 'user_sessions', 'system_settings'];
+    
+    sheetNames.forEach(sheetName => {
+      let sheet = ss.getSheetByName(sheetName);
+      if (!sheet) {
+        sheet = ss.insertSheet(sheetName);
+        
+        // 각 시트별 헤더 설정
+        switch (sheetName) {
+          case 'users':
+            sheet.getRange(1, 1, 1, 6).setValues([
+              ['user_id', 'email', 'password_hash', 'name', 'created_at', 'last_login']
+            ]);
+            break;
+            
+          case 'portfolios':
+            sheet.getRange(1, 1, 1, 6).setValues([
+              ['portfolio_id', 'user_id', 'name', 'description', 'created_at', 'updated_at']
+            ]);
+            break;
+            
+          case 'transactions':
+            sheet.getRange(1, 1, 1, 8).setValues([
+              ['transaction_id', 'portfolio_id', 'type', 'coin_id', 'amount', 'price', 'total_value', 'date']
+            ]);
+            break;
+            
+          case 'user_sessions':
+            sheet.getRange(1, 1, 1, 5).setValues([
+              ['session_id', 'user_id', 'token', 'expires_at', 'created_at']
+            ]);
+            break;
+            
+          case 'system_settings':
+            sheet.getRange(1, 1, 1, 3).setValues([
+              ['setting_key', 'value', 'updated_at']
+            ]);
+            break;
+        }
+        
+        Logger.log(`시트 생성됨: ${sheetName}`);
       }
-    }
-  } catch (error) {
-    console.warn('Cache read error:', error);
-  }
-  
-  return null;
-}
-
-function setCachedData(key, value, ttl = 300) { // 기본 5분
-  try {
-    const cache = CacheService.getScriptCache();
-    const data = {
-      value: value,
-      timestamp: Date.now()
-    };
+    });
     
-    cache.put(key, JSON.stringify(data), ttl);
-  } catch (error) {
-    console.warn('Cache write error:', error);
-  }
-}
-
-// ==================================================
-// 시스템 설정 관리
-// ==================================================
-
-function getSystemProperty(key, defaultValue = null) {
-  try {
-    const properties = PropertiesService.getScriptProperties();
-    const value = properties.getProperty(key);
-    return value !== null ? value : defaultValue;
-  } catch (error) {
-    console.warn('Failed to get system property:', key, error);
-    return defaultValue;
-  }
-}
-
-function setSystemProperty(key, value) {
-  try {
-    const properties = PropertiesService.getScriptProperties();
-    properties.setProperty(key, value.toString());
-    return true;
-  } catch (error) {
-    console.error('Failed to set system property:', key, error);
-    return false;
-  }
-}
-
-// ==================================================
-// 초기화 및 설정 함수들
-// ==================================================
-
-function setupApiKeys() {
-  const ui = SpreadsheetApp.getUi();
-  
-  try {
-    const apiKey = ui.prompt('API 키 설정', 'CoinGecko API 키를 입력하세요 (선택사항):', ui.ButtonSet.OK_CANCEL);
+    // 시스템 설정 초기화
+    initializeSystemSettings();
     
-    if (apiKey.getSelectedButton() === ui.Button.OK && apiKey.getResponseText()) {
-      setSystemProperty('coingecko_api_key', apiKey.getResponseText());
-      ui.alert('API 키가 설정되었습니다.');
-    }
+    Logger.log('초기 데이터 설정 완료');
+    return { success: true, message: '초기 설정이 완료되었습니다.' };
     
-    logActivity('ADMIN', 'API key setup', { success: true });
   } catch (error) {
-    ui.alert('API 키 설정 중 오류가 발생했습니다: ' + error.toString());
-    logActivity('ERROR', 'API key setup failed', { error: error.toString() });
+    Logger.log('초기 설정 실패: ' + error.toString());
+    return { success: false, error: error.toString() };
   }
 }
-
-function checkSystemStatus() {
-  const ui = SpreadsheetApp.getUi();
-  const status = getSystemStatus();
-  
-  if (status.success) {
-    const message = `시스템 상태: ${status.data.status}
-버전: ${status.data.version}
-응답시간: ${status.data.responseTime}ms
-데이터베이스: ${status.data.services.database.status}
-외부 API: ${status.data.services.externalApi.status}`;
-    
-    ui.alert('시스템 상태', message, ui.ButtonSet.OK);
-  } else {
-    ui.alert('오류', '시스템 상태를 확인할 수 없습니다: ' + status.message, ui.ButtonSet.OK);
-  }
-}
-
-function cleanupSystem() {
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert('시스템 정리', '캐시와 임시 데이터를 정리하시겠습니까?', ui.ButtonSet.YES_NO);
-  
-  if (response === ui.Button.YES) {
-    try {
-      // 캐시 정리
-      CacheService.getScriptCache().removeAll();
-      
-      // 오래된 로그 정리 (30일 이상)
-      cleanupOldLogs(30);
-      
-      // 세션 정리
-      cleanupExpiredSessions();
-      
-      ui.alert('시스템 정리가 완료되었습니다.');
-      logActivity('ADMIN', 'System cleanup completed', {});
-    } catch (error) {
-      ui.alert('정리 중 오류가 발생했습니다: ' + error.toString());
-      logActivity('ERROR', 'System cleanup failed', { error: error.toString() });
-    }
-  }
-}
-
-// 마지막 실행 시간 업데이트
-setSystemProperty('last_run_time', Date.now().toString());
